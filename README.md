@@ -1,26 +1,26 @@
-# Longhand Web
+# Longhand
 
-## What this project is
-A browser-based daily seven-letter word deduction puzzle.
+A seven-letter word deduction puzzle. One a day.
 
-## Current status
-**Status: needs confirmation.** This repository is retained and has not been approved for archiving or consolidation.
+This is the web version. Longhand is also published as an Android app.
 
-## Open the project
-The repository has a root `index.html` entry page. For a basic local preview, download the repository, extract the files, and open `index.html` in a modern browser. Full setup and any online dependencies have not yet been verified.
+**Open it:** https://connex222.github.io/LONGHAND-WEB/
 
-## Repository and deployment
-- Default development branch: `main`.
-- Public/live URL: not verified.
-- Hosting and release process: not verified.
-- Tests and browser compatibility: not independently verified.
-- Licence: pending review; no distribution permission is implied.
+## How to use it
 
-## Safe housekeeping
-This file was added solely on a separate documentation review branch. It does not change existing application files, artwork, deployment configuration or the `main` branch. Do not archive, rename, merge or delete this project without the owner's explicit approval.
+1. Open the link above in Chrome, Edge or Safari, on a phone, tablet or computer.
+2. On a phone, use the browser's **Add to Home Screen** option to keep it one tap away.
 
-## Follow-up checks
-- Confirm intended use and current development status.
-- Check setup and any assets or external services required.
-- Verify actual live hosting, if any.
-- Document testing and future maintenance responsibilities.
+Or download `index.html` and open it straight from your device. Everything is in that one file.
+
+## Saving
+
+Your streak and progress are saved on the device you play on. Your data is not sent anywhere. Clearing the browser's data deletes it.
+
+## Made by
+
+Shaun Ellison ([portfolio](https://connex222.github.io)).
+
+## For developers and AI assistants
+
+See `CLAUDE.md` for the build rules.

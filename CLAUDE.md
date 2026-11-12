@@ -12,7 +12,7 @@ The web version of Longhand, Shaun's published daily seven-letter word deduction
 ## Architecture
 
 - **One self-contained file: `index.html`.** All CSS, JavaScript, fonts and artwork live inside it.
-- State is saved in the browser's `localStorage`. Saved under the key `_lh`. Never rename an existing key without migrating the old data, or players lose their progress.
+- State is saved in browser `localStorage` under `lh.daily`, `lh.practice`, `lh.stats`, `lh.settings`, `lh.seen` and `lh.seenhelp`. New optional `lh.history` stores recent results. **Do not rename or clear an existing key without a migration.** The legacy `_lh` storage-probe name was not a progress key; do not overwrite it.
 
 ## Hard rules
 
@@ -25,7 +25,10 @@ The web version of Longhand, Shaun's published daily seven-letter word deduction
 
 ## Project notes
 
-- Keep the puzzle rules and daily puzzle sequence identical to the Android version.
+- Keep the puzzle rules and daily puzzle sequence identical to the Android version. Verify Android parity before approving any sequence change.
+- The fixed answer sequence begins on 12 August 2026 (puzzle No. 1). Existing ordering is protected by the in-app test fingerprint.
+- Newly started Practice games must not expose today's or future daily answer. The entire dictionary remains embedded for offline use; source inspection can still expose future solutions.
+- See `QA-AND-EDITORIAL.md` for the seven-day test procedure, word-selection review, compatibility checklist and manual release gates.
 
 ## Working with Shaun (the owner)
 

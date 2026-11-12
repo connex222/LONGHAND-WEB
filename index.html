@@ -138,7 +138,7 @@ header::after{
 .tools{display:flex;gap:1px}
 .tools.right{justify-content:flex-end}
 .icon{
-  background:none;border:0;color:var(--ink-faint);width:38px;height:38px;border-radius:10px;
+  background:none;border:0;color:var(--ink-dim);width:44px;height:44px;border-radius:10px;
   display:grid;place-items:center;cursor:pointer;font:inherit;transition:color .14s,background .14s;
 }
 .icon:hover{background:var(--surface);color:var(--ink)}
@@ -173,7 +173,7 @@ html[data-theme=light] .board{background:linear-gradient(180deg,#FBFAF7,#F4F2ED)
   opacity:.55;
 }
 .tile{
-  width:var(--tile);height:var(--tile);
+  width:var(--tile);height:var(--tile);position:relative;
   border:1px solid var(--edge);border-radius:7px;
   background:none;
   display:grid;place-items:center;
@@ -193,6 +193,9 @@ html[data-theme=light] .board{background:linear-gradient(180deg,#FBFAF7,#F4F2ED)
 .tile.exact{background:linear-gradient(180deg,var(--exact-a),var(--exact-b));border-color:var(--exact-b);color:var(--exact-ink)}
 .tile.present{background:linear-gradient(180deg,var(--present-a),var(--present-b));border-color:var(--present-b);color:var(--present-ink)}
 .tile.absent{background:linear-gradient(180deg,var(--absent-a),var(--absent-b));border-color:var(--absent-a);color:var(--absent-ink)}
+/* A shape accompanies colour so the marks remain distinguishable without hue. */
+.tile.exact::after,.tile.present::after{position:absolute;right:2px;bottom:1px;font:800 clamp(8px,1.6vw,11px) var(--f-ui);line-height:1}
+.tile.exact::after{content:"✓"}.tile.present::after{content:"●"}
 .tile.flip{animation:flip .3s cubic-bezier(.45,0,.55,1)}
 @keyframes press{0%{transform:scale(.93)}60%{transform:scale(1.015)}100%{transform:scale(1)}}
 @keyframes flip{0%{transform:rotateX(0) scale(1)}48%{transform:rotateX(-88deg) scale(.965)}100%{transform:rotateX(0) scale(1)}}
@@ -239,6 +242,8 @@ html[data-theme=light] .board{background:linear-gradient(180deg,#FBFAF7,#F4F2ED)
 .key:active{transform:translateY(1px);box-shadow:inset 0 2px 4px var(--sink)}
 .key.exact{background:linear-gradient(180deg,var(--exact-a),var(--exact-b));border-color:var(--exact-b);color:var(--exact-ink)}
 .key.present{background:linear-gradient(180deg,var(--present-a),var(--present-b));border-color:var(--present-b);color:var(--present-ink)}
+.key.exact::after,.key.present::after{position:absolute;right:3px;top:2px;font-size:10px}
+.key.exact::after{content:"✓"}.key.present::after{content:"●"}
 .key.absent{background:var(--key-dead);border-color:transparent;color:var(--key-dead-ink);box-shadow:inset 0 1px 3px var(--sink)}
 /* spent: every occurrence of this letter has been located */
 .key.spent{background:linear-gradient(180deg,var(--exact-a),var(--exact-b));border-color:var(--exact-b);color:var(--exact-ink);opacity:.44}
@@ -258,7 +263,7 @@ html[data-theme=light] .board{background:linear-gradient(180deg,#FBFAF7,#F4F2ED)
 }
 @keyframes rise-in{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
 .sheet h2{font-family:var(--f-display);font-weight:500;font-size:26px;letter-spacing:-.015em;margin:0 0 4px;line-height:1.1}
-.sheet .sub{color:var(--ink-faint);font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;margin:0 0 20px}
+.sheet .sub{color:var(--ink-dim);font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;margin:0 0 20px}
 .sheet h3{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:24px 0 10px;font-weight:600}
 .sheet p{font-size:14.5px;line-height:1.6;color:var(--ink-dim);margin:0 0 11px}
 .sheet p strong{color:var(--ink);font-weight:600}
@@ -304,6 +309,10 @@ html[data-theme=light] .board{background:linear-gradient(180deg,#FBFAF7,#F4F2ED)
 .mini i{height:15px;border-radius:3px;background:linear-gradient(180deg,var(--absent-a),var(--absent-b));box-shadow:inset 0 1px 0 var(--hl)}
 .mini i.exact{background:linear-gradient(180deg,var(--exact-a),var(--exact-b))}
 .mini i.present{background:linear-gradient(180deg,var(--present-a),var(--present-b))}
+.mini i.exact::after{content:"✓"}.mini i.present::after{content:"•"}
+.mini i{position:relative}.mini i::after{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink);font-size:9px;font-style:normal}
+.stat-note{color:var(--ink-dim)!important;font-size:12px!important;line-height:1.5!important;margin:12px 0!important;text-align:left}
+.history{padding-left:24px;color:var(--ink);font-size:13px;line-height:1.8}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #testpanel{position:fixed;inset:0;background:var(--ground);z-index:99;overflow:auto;padding:22px;font-family:ui-monospace,monospace;font-size:12px;line-height:1.7;-webkit-user-select:text;user-select:text}
 #testpanel .p{color:#4ec9a0}#testpanel .f{color:#f04b4b;font-weight:700}
@@ -342,10 +351,10 @@ html[data-theme=light] .board{background:linear-gradient(180deg,#FBFAF7,#F4F2ED)
     <div class="board" id="board" role="grid" aria-label="Guess grid"></div>
   </div>
 
-  <div class="toastslot"><div class="toast" id="toast" role="status"></div></div>
+  <div class="toastslot"><div class="toast" id="toast" aria-hidden="true"></div></div>
 
-  <div class="kb" id="kb"></div>
-  <div class="sr" id="live" aria-live="polite" aria-atomic="false"></div>
+  <div class="kb" id="kb" role="group" aria-label="On-screen letter keyboard"></div>
+  <div class="sr" id="live" role="status" aria-live="polite" aria-atomic="true"></div>
 </div>
 
 <div class="scrim" id="scrim" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
@@ -35449,23 +35458,34 @@ function finish(won, r) {
 }
 
 document.addEventListener("keydown", e => {
-  if (document.getElementById("scrim").classList.contains("open")) {
-    if (e.key === "Escape") closeSheet();
+  if (scrim.classList.contains("open")) {
+    if (e.key === "Escape") { e.preventDefault(); closeSheet(); }
+    if (e.key === "Tab") {
+      const focusables = [...sheet.querySelectorAll("button:not([disabled]),textarea:not([disabled]),a[href]")];
+      if (!focusables.length) { e.preventDefault(); sheet.focus(); return; }
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    }
     return;
   }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target instanceof Element && e.target.closest("button,input,select,textarea,[contenteditable]")) return;
   if (titleUp) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enterGame(); } return; }
   if (e.key === "Enter") { e.preventDefault(); press("enter"); }
   else if (e.key === "Backspace") { e.preventDefault(); press("back"); }
-  else if (e.key === "ArrowLeft") { S.cursor = Math.max(0, S.cursor - 1); paintCursor(); }
-  else if (e.key === "ArrowRight") { S.cursor = Math.min(LEN - 1, S.cursor + 1); paintCursor(); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); S.cursor = Math.max(0, S.cursor - 1); paintCursor(); save(); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); S.cursor = Math.min(LEN - 1, S.cursor + 1); paintCursor(); save(); }
   else if (/^[a-zA-Z]$/.test(e.key)) press(e.key.toLowerCase());
 });
 board.addEventListener("click", e => {
   const t = e.target.closest(".tile"); if (!t || S.done) return;
   const row = t.parentElement;
   if (+row.dataset.r !== S.guesses.length) return;
-  S.cursor = [...row.children].indexOf(t); paintCursor();
+  S.cursor = [...row.children].indexOf(t); paintCursor(); save();
 });
 
 /* ============================================================ persistence */
@@ -35628,15 +35648,30 @@ function mount() {
 /* ================================================================ sheets = */
 const scrim = document.getElementById("scrim");
 const sheet = document.getElementById("sheet");
+let sheetReturnFocus = null;
 function openSheet(html) {
-  sheet.innerHTML = `<button class="icon close" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>` + html;
+  if (!scrim.classList.contains("open")) sheetReturnFocus = document.activeElement;
+  sheet.innerHTML = `<button class="icon close" data-close aria-label="Close dialog"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>` +
+    html.replace("<h2>", '<h2 id="sheet-heading">');
+  scrim.setAttribute("aria-labelledby", "sheet-heading");
   scrim.classList.add("open");
+  document.querySelector(".app").inert = true;
+  titleEl.inert = true;
   sheet.scrollTop = 0;
   sheet.tabIndex = -1;
   sheet.focus({ preventScroll: true });
   bindSheet();
 }
-function closeSheet() { scrim.classList.remove("open"); }
+
+function closeSheet() {
+  scrim.classList.remove("open");
+  document.querySelector(".app").inert = false;
+  titleEl.inert = false;
+  if (sheetReturnFocus && sheetReturnFocus.isConnected && typeof sheetReturnFocus.focus === "function")
+    sheetReturnFocus.focus({ preventScroll: true });
+  sheetReturnFocus = null;
+}
+
 scrim.addEventListener("click", e => {
   if (e.target === scrim || e.target.closest("[data-close]")) closeSheet();
 });
@@ -35644,7 +35679,7 @@ scrim.addEventListener("click", e => {
 const tileHTML = (ch, cls) => `<div class="tile filled ${cls}">${ch}</div>`;
 function helpSheet() {
   return `<h2>How to play</h2>
-  <p class="sub">Find the seven-letter word. ${rowCount()} tries.</p>
+  <p class="sub">Find the seven-letter word. ${S.rows} tries.</p>
   <p>Every guess must be a real seven-letter word. After each one, the tiles tell you how close you were.</p>
   <div class="ex">${tileHTML("c", "exact")}${tileHTML("l", "")}${tileHTML("i", "")}${tileHTML("m", "")}${tileHTML("a", "")}${tileHTML("t", "")}${tileHTML("e", "")}</div>
   <p><strong>C</strong> is in the word and in the right place.</p>
@@ -35657,46 +35692,62 @@ function helpSheet() {
   <h3>What you will not be asked</h3>
   <p>No answer is ever a plain plural or a tense of a shorter word. <strong>BOTTLES</strong>, <strong>WALKING</strong> and <strong>TALLEST</strong> can be guessed but never hidden. Words like <strong>CEILING</strong>, <strong>TEACHER</strong> and <strong>SUCCESS</strong> stand on their own, so those are fair game.</p>
   <h3>Colour</h3>
-  <p>Blue and amber rather than green and yellow, so the two states stay apart for colour-blind players by default.</p>
+  <p>Blue with a tick means the right letter in the right place. Amber with a dot means that letter belongs somewhere else. Grey means no unused copies of that letter remain.</p>
   <p style="color:var(--ink-faint);font-size:12.5px;margin-top:16px">One puzzle a day, ${ANSWERS.length.toLocaleString()} in the deck. Practice mode is unlimited. Nothing behind a paywall.</p>`;
 }
 
 function statsSheet() {
   const max = Math.max(1, ...stats.dist);
   const rows = stats.dist.map((n, i) => `<div class="bar"><i>${i + 1}</i><u class="${n === max && n > 0 ? "hi" : ""}" style="width:${8 + (n / max) * 78}%">${n}</u></div>`).join("");
-  return `<h2>Statistics</h2><p class="sub">Daily puzzles only.</p>
+  const latest = history.filter(entry => entry && Number.isInteger(entry.no) && entry.no > 0 &&
+    entry.no <= Math.max(1, puzzleNumber())).sort((a,b) => b.no - a.no).slice(0, 7);
+  const recent = latest.map(entry => {
+    const date = new Date(EPOCH + (entry.no - 1) * 86400000)
+      .toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+    return `<li>No. ${entry.no} · ${date} — ${entry.won ? `solved in ${entry.attempts}` : "not solved"}</li>`;
+  }).join("");
+  return `<h2>Statistics</h2><p class="sub">Daily puzzles only. Stored on this device.</p>
   <div class="stats">
     <div class="stat"><b>${stats.played}</b><span>Played</span></div>
     <div class="stat"><b>${stats.played ? Math.round(100 * stats.won / stats.played) : 0}</b><span>Win %</span></div>
-    <div class="stat"><b>${stats.streak}</b><span>Streak</span></div>
-    <div class="stat"><b>${stats.max}</b><span>Best</span></div>
+    <div class="stat"><b>${stats.streak}</b><span>Win run</span></div>
+    <div class="stat"><b>${stats.max}</b><span>Best run</span></div>
   </div>
-  <h3>Guess distribution</h3><div class="bars">${rows}</div>`;
+  <p class="stat-note">A win run counts consecutive puzzles you play and win. Missing a day does not reset it; an unsuccessful puzzle does.</p>
+  <h3>Guess distribution</h3><div class="bars">${rows}</div>
+  <h3>Recent results</h3>
+  ${recent ? `<ol class="history">${recent}</ol><p class="stat-note">History is recorded from this update onwards.</p>` :
+    `<p class="stat-note">No detailed history recorded yet. Existing totals are preserved.</p>`}`;
 }
 
 function shareText() {
-  const sq = { 2: "\u{1F7E6}", 1: "\u{1F7E7}", 0: settings.theme === "dark" ? "\u2B1B" : "\u2B1C" };
+  const sq = { 2: "\u{1F7E6}", 1: "\u{1F7E7}", 0: "\u2B1C" };
   const grid = S.guesses.map(g => mark(g, S.answer).map(m => sq[m]).join("")).join("\n");
-  const head = `Longhand No. ${S.no} \u2014 ${S.won ? S.guesses.length : "X"}/${S.rows}` +
-    (S.hard ? " *" : "") + (stats.streak > 1 ? `  \u00b7  streak ${stats.streak}` : "");
+  const head = `Longhand No. ${S.no} — ${S.won ? S.guesses.length : "X"}/${S.rows}` +
+    (S.hard ? " *" : "") + (stats.streak > 1 ? ` · win run ${stats.streak}` : "");
   return head + "\n" + grid;
 }
 
 function resultSheet() {
   const share = S.mode === "daily";
-  const grid = S.guesses.map(g =>
-    `<div class="mini">` + mark(g, S.answer).map(m => `<i class="${NAMES[m]}"></i>`).join("") + `</div>`
-  ).join("");
+  const grid = S.guesses.map((g, r) => {
+    const marks = mark(g, S.answer);
+    const description = marks.map((m, i) => `${g[i].toUpperCase()} ${WORDS[m]}`).join(", ");
+    return `<div class="mini" role="img" aria-label="Guess ${r + 1}: ${description}">` +
+      marks.map(m => `<i class="${NAMES[m]}" aria-hidden="true"></i>`).join("") + `</div>`;
+  }).join("");
   const head = S.won
     ? ["Sharp.", "Neatly done.", "Written out in full.", "That will do nicely.", "Good hand."][Math.min(S.guesses.length - 1, 4)]
     : "Not this time";
+  const nextReady = share && puzzleNumber() > S.no;
   return `<h2>${head}</h2>
   <p class="sub">${S.won ? `Solved in ${S.guesses.length} of ${S.rows}` : "The word was"}</p>
   ${S.won ? "" : `<div class="answerline">${S.answer}</div>`}
   <div class="minigrid">${grid}</div>
   ${share ? `<button class="btn" id="do-share"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round"><path d="M12 16V4M8 8l4-4 4 4M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg>Share result</button>` : ""}
+  ${nextReady ? `<button class="btn" id="do-today">Play today's puzzle</button>` : ""}
   <button class="btn ghost" id="do-practice">${share ? "Play a practice round" : "Another practice round"}</button>
-  ${share ? `<p style="text-align:center;font-size:12.5px;color:var(--ink-faint);margin-top:12px">Next puzzle at midnight.</p>` : ""}`;
+  ${share && !nextReady ? `<p class="stat-note">Next puzzle at local midnight.</p>` : ""}`;
 }
 
 function settingsSheet() {
@@ -35709,10 +35760,22 @@ function settingsSheet() {
   <div class="opt"><div>Hard mode<small>Five tries, and every revealed letter must be reused.</small></div>${sw("hard", settings.hard)}</div>
   <div class="opt"><div>Assist row<small>A seventh try. Off by default \u2014 six is the intended difficulty.</small></div>${sw("assist", settings.assist)}</div>
   <div class="opt"><div>Mark spent letters<small>Strike through a letter on the keyboard once you have found every one of them.</small></div>${sw("spent", settings.spent)}</div>
-  <div class="opt"><div>Practice mode<small>${ANSWERS.length - seen.size} of ${ANSWERS.length} words unplayed.</small></div>
+  <div class="opt"><div>Practice mode<small>${publishedAnswers().filter(w => !seen.has(w)).length} previously published puzzles unplayed. Today’s and future answers are excluded.</small></div>
     <button class="icon" id="go-practice" aria-label="Start practice round"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9z"/></svg></button></div>
   <button class="btn ghost" id="reset-seen">Reset practice history</button>
   ${store.live ? "" : `<p style="font-size:12px;color:var(--ink-faint);margin-top:14px">Storage is unavailable here, so progress will not survive a reload.</p>`}`;
+}
+
+function copyResult(text) {
+  const field = document.createElement("textarea");
+  field.value = text; field.readOnly = true; field.setAttribute("aria-label", "Shareable result");
+  field.style.cssText = "position:fixed;left:-9999px;top:0";
+  document.body.appendChild(field);
+  field.select();
+  let copied = false;
+  try { copied = !!document.execCommand("copy"); } catch (_) {}
+  field.remove();
+  return copied;
 }
 
 function bindSheet() {
@@ -35736,13 +35799,24 @@ function bindSheet() {
   if (p) p.onclick = () => { closeSheet(); startPractice(true); };
   const rs = sheet.querySelector("#reset-seen");
   if (rs) rs.onclick = () => { seen = new Set(); store.set("lh.seen", []); toast("Practice history cleared"); openSheet(settingsSheet()); };
+  const today = sheet.querySelector("#do-today");
+  if (today) today.onclick = () => { closeSheet(); startDaily(true); };
   const sh = sheet.querySelector("#do-share");
   if (sh) sh.onclick = async () => {
     const text = shareText();
-    try {
-      if (navigator.share) await navigator.share({ text });
-      else { await navigator.clipboard.writeText(text); toast("Copied to clipboard"); }
-    } catch (e) { try { await navigator.clipboard.writeText(text); toast("Copied to clipboard"); } catch (_) { toast("Could not share"); } }
+    if (navigator.share) {
+      try { await navigator.share({ text }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text); toast("Result copied"); return;
+    } } catch (_) {}
+    if (copyResult(text)) { toast("Result copied"); return; }
+    const field = document.createElement("textarea");
+    field.readOnly = true; field.value = text; field.setAttribute("aria-label", "Select and copy your result");
+    field.style.cssText = "width:100%;min-height:130px;margin-top:12px;color:inherit;background:var(--surface-2)";
+    sh.insertAdjacentElement("afterend",field); field.select();
+    toast("Select and copy the result below");
   };
 }
 

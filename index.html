@@ -35884,6 +35884,42 @@ function runTests() {
   t("same date gives the same answer", answerFor(puzzleNumber(new Date(2026, 8, 1))), answerFor(21));
   t("schedule wraps safely", String(typeof answerFor(ANSWERS.length + 5)), "string");
 
+  // Seven-day reproducible release sequence (no solution words printed).
+  const sevenDays = Array.from({ length: 7 }, (_, i) => puzzleNumber(new Date(2026, 7, 12 + i)));
+  t("seven local days produce puzzles 1 through 7", sevenDays.join(","), "1,2,3,4,5,6,7");
+  t("all seven scheduled answers are distinct", String(new Set(sevenDays.map(answerFor)).size), "7");
+  t("seven-day answers stay deterministic", String(sevenDays.every(n => answerFor(n) === answerFor(n))), "true");
+  t("before and after midnight use different numbers",
+    String(puzzleNumber(new Date(2026, 7, 12, 23, 59)) + 1 === puzzleNumber(new Date(2026, 7, 13, 0, 0))), "true");
+  t("same local day remains stable all hours",
+    String(puzzleNumber(new Date(2026, 10, 12, 0, 0)) === puzzleNumber(new Date(2026, 10, 12, 23, 59))), "true");
+  t("March UK DST transition advances exactly one calendar day",
+    String(puzzleNumber(new Date(2026, 2, 29, 12)) - puzzleNumber(new Date(2026, 2, 28, 12))), "1");
+  t("October UK DST transition advances exactly one calendar day",
+    String(puzzleNumber(new Date(2026, 9, 25, 12)) - puzzleNumber(new Date(2026, 9, 24, 12))), "1");
+  t("year boundary advances exactly one day",
+    String(puzzleNumber(new Date(2026, 11, 31, 23, 59)) + 1 === puzzleNumber(new Date(2027, 0, 1, 0, 0))), "true");
+
+  t("all valid guesses are seven lower-case letters",
+    String([...VALID].every(w => /^[a-z]{7}$/.test(w))), "true");
+  t("punctuation is not a valid guess", String(VALID.has("apple!!")), "false");
+  t("all valid words solve when matched with themselves",
+    String([...VALID].every(w => mark(w, w).every(x => x === EXACT))), "true");
+  t("legacy saved cursor recovers a gap", String(restoreCursor(undefined, "ab c")), "2");
+  t("a full saved row keeps cursor after the seventh letter", String(restoreCursor(undefined, "faculty")), "7");
+  t("explicit cursor positions survive refresh", String(restoreCursor(3, "faculty")), "3");
+  t("practice excludes today and all unpublished answers",
+    String(publishedAnswers().length === Math.max(0, Math.min(ANSWERS.length, puzzleNumber() - 1))), "true");
+  t("present-day answer is excluded from fresh practice",
+    String(puzzleNumber() > ANSWERS.length || !publishedAnswers().includes(answerFor(puzzleNumber()))), "true");
+
+  // FNV-1a snapshot: the published answer order is immutable without editorial approval.
+  let scheduleHash = 2166136261;
+  for (const ch of ANSWERS.join("\n"))
+    scheduleHash = Math.imul(scheduleHash ^ ch.charCodeAt(0), 16777619) >>> 0;
+  t("published 1,245-answer sequence is unchanged",
+    scheduleHash.toString(16).padStart(8, "0"), "a050d5e6");
+
   const div = document.createElement("div");
   div.id = "testpanel";
   div.innerHTML = `<div style="font-family:var(--f-display);font-size:20px;margin-bottom:14px">Longhand self-test</div>

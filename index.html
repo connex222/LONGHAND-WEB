@@ -35159,7 +35159,9 @@ const KEYS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 /* localStorage where available, in-memory where it is not (artifact previews) */
 const store = (() => {
   let live = false;
-  try { localStorage.setItem("_lh", "1"); localStorage.removeItem("_lh"); live = true; } catch (e) {}
+  try { const probe = "lh.__probe__" + Date.now() + Math.random();
+    localStorage.setItem(probe, "1"); localStorage.removeItem(probe); live = true;
+  } catch (e) {}
   const mem = new Map();
   return {
     live,
@@ -35246,6 +35248,9 @@ const S = {
 const settings = store.get("lh.settings", { theme: "dark", assist: false, hard: false, spent: true });
 let stats = store.get("lh.stats", { played: 0, won: 0, streak: 0, max: 0, dist: [0, 0, 0, 0, 0, 0, 0] });
 let seen = new Set(store.get("lh.seen", []));
+let history = store.get("lh.history", []);
+if (!Array.isArray(history)) history = [];
+const reduceMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 function rowCount() { return settings.hard ? 5 : settings.assist ? 7 : 6; }
 
@@ -35310,14 +35315,14 @@ function paintRow(r, letters, marks, animate) {
       t.className = "tile filled " + NAMES[marks[c]];
       t.setAttribute("aria-label", `Row ${r + 1} letter ${c + 1}, ${ch.toUpperCase()}, ${WORDS[marks[c]]}`);
     };
-    if (animate) {
+    if (animate && !reduceMotion()) {
       t.style.animationDelay = (c * 82) + "ms";
       t.classList.add("flip");
       setTimeout(apply, c * 82 + 128);
       setTimeout(() => { t.classList.remove("flip"); t.style.animationDelay = ""; }, c * 82 + 320);
     } else apply();
   });
-  if (animate) { row.classList.add("roll"); setTimeout(() => row.classList.remove("roll"), 800); }
+  if (animate && !reduceMotion()) { row.classList.add("roll"); setTimeout(() => row.classList.remove("roll"), 800); }
 }
 
 function paintCursor() {
@@ -35352,6 +35357,7 @@ function paintKeyboard() {
     const k = b.dataset.k;
     b.classList.remove("exact", "present", "absent", "spent");
     if (state[k]) b.classList.add(state[k]);
+    if (/^[a-z]$/.test(k)) b.setAttribute("aria-label", `Letter ${k.toUpperCase()}, ${state[k] === "spent" ? "all copies located" : state[k] ? WORDS[NAMES.indexOf(state[k])] : "not yet tried"}`);
   });
 }
 
@@ -35406,38 +35412,40 @@ function redrawCurrent() {
 function submit() {
   if (S.done || S.busy) return;
   const g = S.cur.replace(/\s/g, "");
-  if (g.length < LEN) { shake(); return toast("Needs seven letters"); }
-  if (!VALID.has(g)) { shake(); return toast("Not in the word list"); }
-  if (settings.hard) {
+  if (S.cur.length !== LEN || g.length !== LEN) { shake(); return toast("Enter all seven letters"); }
+  if (!VALID.has(g)) { shake(); return toast("Not in the word list — try another word"); }
+  if (S.hard) {
     const err = hardModeError(g, S.guesses, S.answer);
     if (err) { shake(); return toast(err, 2200); }
   }
-  const m = mark(g, S.answer);
-  const r = S.guesses.length;
+  const m = mark(g, S.answer), r = S.guesses.length;
   S.guesses.push(g); S.cur = ""; S.cursor = 0; S.busy = true;
+  save(); // An interrupted reveal must never discard the accepted guess
   paintRow(r, g.split(""), m, true);
-  live.textContent = `Row ${r + 1}: ` +
-    g.split("").map((ch, i) => `${ch.toUpperCase()} ${WORDS[m[i]]}`).join(", ");
+  const exact = m.filter(x => x === EXACT).length;
+  const present = m.filter(x => x === PRESENT).length;
+  live.textContent = `Guess ${r + 1}, ${g.toUpperCase()}: ${exact} in the right place, ` +
+    `${present} present elsewhere. ` +
+    g.split("").map((ch, i) => `Position ${i + 1}, ${ch.toUpperCase()}, ${WORDS[m[i]]}`).join("; ");
   setTimeout(() => {
     S.busy = false;
     paintKeyboard();
     const won = g === S.answer;
     if (won || S.guesses.length >= S.rows) finish(won, r);
     else { paintCursor(); save(); }
-  }, 7 * 82 + 290);
+  }, reduceMotion() ? 0 : 7 * 82 + 290);
 }
 
 function finish(won, r) {
+  if (S.done) return;
   S.done = true; S.won = won;
   if (won) board.children[r].classList.add("won");
-  if (S.mode === "daily") {
-    stats.played++;
-    if (won) { stats.won++; stats.streak++; stats.max = Math.max(stats.max, stats.streak); stats.dist[r]++; }
-    else stats.streak = 0;
-    store.set("lh.stats", stats);
-  } else { seen.add(S.answer); store.set("lh.seen", [...seen]); }
+  if (S.mode === "daily") recordDailyResult(S.no, won, S.guesses.length);
+  else { seen.add(S.answer); store.set("lh.seen", [...seen]); }
   save();
-  setTimeout(() => openSheet(resultSheet()), won ? 900 : 500);
+  live.textContent = won ? `Solved in ${S.guesses.length} attempts.` :
+    `No attempts remain. The answer was ${S.answer.toUpperCase()}.`;
+  setTimeout(() => openSheet(resultSheet()), reduceMotion() ? 0 : won ? 650 : 350);
 }
 
 document.addEventListener("keydown", e => {
@@ -35464,17 +35472,18 @@ board.addEventListener("click", e => {
 function key() { return S.mode === "daily" ? "lh.daily" : "lh.practice"; }
 function save() {
   store.set(key(), { no: S.no, answer: S.answer, rows: S.rows, hard: S.hard,
-    guesses: S.guesses, cur: S.cur, done: S.done, won: S.won });
+    guesses: S.guesses, cur: S.cur, cursor: S.cursor, done: S.done, won: S.won });
 }
 
 let titleUp = true, pendingResult = false;
 const titleEl = document.getElementById("title");
 
 function paintTitle() {
-  document.getElementById("t-no").textContent = `No. ${S.no}  \u00b7  ` +
-    new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const date = new Date(EPOCH + (S.no - 1) * 86400000);
+  document.getElementById("t-no").textContent = `No. ${S.no}  ·  ` +
+    date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
   document.getElementById("t-play").textContent =
-    S.done ? "See today\u2019s result" : S.guesses.length ? "Continue" : "Play";
+    S.done ? "See result" : S.guesses.length ? "Continue" : "Play";
 }
 
 function enterGame() {
@@ -35491,19 +35500,78 @@ function enterGame() {
   }, 470);
 }
 
-function startDaily() {
+function recordDailyResult(no,won,attempts) {
+  if (!Number.isInteger(no) || no < 1) return;
+  const found = history.some(entry => entry && entry.no === no);
+  if (stats.lastRecordedNo !== no && !found) {
+    stats.played += 1;
+    if (won) {
+      stats.won += 1;
+      stats.streak += 1; // A win run, not a calendar-day attendance streak
+      stats.max = Math.max(stats.max, stats.streak);
+      stats.dist[Math.min(attempts, 7) - 1] += 1;
+    } else stats.streak = 0;
+    stats.lastRecordedNo = no;
+    store.set("lh.stats", stats);
+  }
+  if (!found) {
+    history.push({ no, won: !!won, attempts, rows: S.rows, hard: S.hard });
+    store.set("lh.history", history);
+  }
+}
+
+function publishedAnswers() {
+  // Practice is limited to *previously* published daily answers.
+  // Do not change ANSWERS ordering: it is the public daily schedule.
+  return ANSWERS.slice(0, Math.max(0, Math.min(ANSWERS.length, puzzleNumber() - 1)));
+}
+
+function restoreCursor(savedCursor, cur) {
+  if (Number.isInteger(savedCursor) && savedCursor >= 0 && savedCursor <= LEN) return savedCursor;
+  const firstBlank = cur.padEnd(LEN, " ").indexOf(" ");
+  return firstBlank < 0 ? LEN : firstBlank;
+}
+
+function startDaily(force = false) {
   S.mode = "daily";
-  S.no = puzzleNumber();
+  const today = Math.max(1, puzzleNumber());
   const saved = store.get("lh.daily", null);
+  const validSaved = !!(saved && Number.isInteger(saved.no) && saved.no >= 1 &&
+    saved.no <= today && Number.isInteger(saved.rows) && saved.rows >= 5 && saved.rows <= 7 &&
+    Array.isArray(saved.guesses) && saved.guesses.length <= saved.rows &&
+    saved.guesses.every(g => typeof g === "string" && /^[a-z]{7}$/.test(g)) &&
+    typeof saved.answer === "string" && /^[a-z]{7}$/.test(saved.answer));
+  const unfinishedOld = !force && validSaved && saved.no < today && !saved.done &&
+    (saved.guesses.length > 0 || (typeof saved.cur === "string" && !!saved.cur.trim()));
+  S.no = unfinishedOld ? saved.no : today;
   S.answer = answerFor(S.no);
-  if (saved && saved.no === S.no) {
-    S.rows = saved.rows; S.hard = saved.hard; S.guesses = saved.guesses;
-    S.cur = saved.cur || ""; S.done = saved.done; S.won = saved.won;
+  if (validSaved && saved.no === S.no) {
+    S.answer = saved.answer; // Freeze this day's already-started solution across updates
+    VALID.add(S.answer);
+    S.rows = saved.rows; S.hard = !!saved.hard;
+    S.guesses = saved.guesses.slice();
+    S.cur = typeof saved.cur === "string" ? saved.cur.slice(0, LEN).replace(/[^a-z ]/g, "") : "";
+    S.done = !!saved.done; S.won = !!saved.won;
+    S.cursor = restoreCursor(saved.cursor, S.cur);
+    const solved = S.guesses.includes(S.answer);
+    const finished = solved || S.guesses.length >= S.rows;
+    // Recover a submission interrupted while the tiles were animating.
+    if (finished) {
+      S.done = true; S.won = solved; S.cur = "";
+      if (saved.done && !Number.isInteger(stats.lastRecordedNo) &&
+          !history.some(entry => entry && entry.no === S.no)) {
+        // Legacy versions already counted saved.done: don't double-count on upgrade.
+        stats.lastRecordedNo = S.no;
+        store.set("lh.stats", stats);
+      }
+      recordDailyResult(S.no, S.won, S.guesses.length);
+      if (!saved.done || saved.won !== S.won) save();
+    }
   } else {
     S.rows = rowCount(); S.hard = settings.hard;
-    S.guesses = []; S.cur = ""; S.done = false; S.won = false;
+    S.guesses = []; S.cur = ""; S.done = false; S.won = false; S.cursor = 0;
   }
-  S.cursor = Math.min(S.cur.replace(/\s+$/, "").length, LEN);
+  S.busy = false;
   mount();
   if (titleUp) paintTitle();
   else if (S.done) setTimeout(() => openSheet(resultSheet()), 260);
@@ -35511,19 +35579,31 @@ function startDaily() {
 }
 
 function startPractice(fresh) {
-  S.mode = "practice";
   const saved = store.get("lh.practice", null);
-  if (!fresh && saved && !saved.done) {
-    S.answer = saved.answer; S.rows = saved.rows; S.hard = saved.hard;
-    S.guesses = saved.guesses; S.cur = saved.cur || ""; S.done = saved.done; S.won = saved.won;
+  const resume = !fresh && saved && !saved.done &&
+    typeof saved.answer === "string" && /^[a-z]{7}$/.test(saved.answer) &&
+    Number.isInteger(saved.rows) && saved.rows >= 5 && saved.rows <= 7 &&
+    Array.isArray(saved.guesses) && saved.guesses.length < saved.rows &&
+    saved.guesses.every(g => typeof g === "string" && /^[a-z]{7}$/.test(g));
+  if (resume) {
+    S.answer = saved.answer; S.rows = saved.rows; S.hard = !!saved.hard;
+    S.guesses = saved.guesses.slice(); S.cur = typeof saved.cur === "string" ? saved.cur.slice(0, LEN).replace(/[^a-z ]/g, "") : "";
+    S.cursor = restoreCursor(saved.cursor, S.cur);
+    S.done = false; S.won = false;
+    VALID.add(S.answer); // Grandfather an in-progress practice game
   } else {
-    let pool = ANSWERS.filter(w => !seen.has(w));
-    if (!pool.length) { seen = new Set(); store.set("lh.seen", []); pool = ANSWERS.slice(); toast("Pool complete \u2014 starting over", 2200); }
+    const eligible = publishedAnswers();
+    if (!eligible.length) { toast("Practice starts after the first daily puzzle"); return; }
+    let pool = eligible.filter(w => !seen.has(w));
+    if (!pool.length) {
+      seen = new Set(); store.set("lh.seen", []);
+      pool = eligible; toast("Past-puzzle pool complete — starting over", 2200);
+    }
     S.answer = pool[Math.floor(Math.random() * pool.length)];
     S.rows = rowCount(); S.hard = settings.hard;
-    S.guesses = []; S.cur = ""; S.done = false; S.won = false;
+    S.guesses = []; S.cur = ""; S.done = false; S.won = false; S.cursor = 0;
   }
-  S.no = 0; S.cursor = Math.min(S.cur.replace(/\s+$/, "").length, LEN);
+  S.mode = "practice"; S.no = 0; S.busy = false;
   mount(); save();
 }
 
@@ -35678,7 +35758,7 @@ else {
   document.getElementById("t-play").onclick = enterGame;
   document.getElementById("t-help").onclick = () => openSheet(helpSheet());
   // roll over to the new puzzle without a reload
-  setInterval(() => { if (S.mode === "daily" && puzzleNumber() !== S.no) startDaily(); }, 30000);
+  setInterval(() => { if (S.mode === "daily" && puzzleNumber() !== S.no && !S.guesses.length && !S.cur.trim() && !S.done) startDaily(); }, 30000);
 }
 
 /* ============================================================== self-test */
